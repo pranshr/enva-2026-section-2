@@ -1,8 +1,7 @@
-import EventCard from "./EventCardV3";
-
+import EventCard from "./EventCard/EventCardV3";
 
 const Events = () => {
-    return <div className="flex flex-col items-center mb-">
+    return <div className="flex flex-col items-center mb-10">
         <div className="my-6 mt-10 flex flex-col items-center">
             <h1 className="text-6xl font-bold m-4 text-[#d4af37] text-center">
                 Featured Events
@@ -17,12 +16,37 @@ const Events = () => {
                         md:grid-cols-2 md:grid-rows-3 md:gap-14
                         xl:grid-cols-3 xl:grid-rows-2 xl:gap-10
         ">
-            <EventCard />
-            <EventCard />
-            <EventCard />
-            <EventCard />
-            <EventCard />
-            <EventCard />
+
+            <EventCard
+                name="Treasure Hunt"
+                description="Decode cryptic clues, chase hidden locations, and race against time in this cinematic hunt."
+                location="Main Hall"
+            />
+            <EventCard
+            name="Treasure Hunt"
+            description="Decode cryptic clues, chase hidden locations, and race against time in this cinematic hunt."
+            location="Main Hall"
+            />
+            <EventCard
+            name="Treasure Hunt"
+            description="Decode cryptic clues, chase hidden locations, and race against time in this cinematic hunt."
+            location="Main Hall"
+            />
+            <EventCard
+            name="Treasure Hunt"
+            description="Decode cryptic clues, chase hidden locations, and race against time in this cinematic hunt."
+            location="Main Hall"
+            />
+            <EventCard
+            name="Treasure Hunt"
+            description="Decode cryptic clues, chase hidden locations, and race against time in this cinematic hunt."
+            location="Main Hall"
+            />
+            <EventCard
+            name="Treasure Hunt"
+            description="Decode cryptic clues, chase hidden locations, and race against time in this cinematic hunt."
+            location="Main Hall"
+            />
 
         </div>
     </div>

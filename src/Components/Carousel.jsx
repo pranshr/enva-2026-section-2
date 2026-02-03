@@ -1,72 +1,50 @@
-import { useRef } from "react";
-import { useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import CarouselSlide from "./CarouselSlide";
 
-
 const Carousel = () => {
-
-    const createImgDiv = (image) => {
-        return <CarouselSlide image={image} />
-    };
+    const autoSlideTimer = 2500;
+    const pauseAutoSlideTimer = 5500;
 
 
-    const autoSlideTimer = 2500
-    const pauseAutoSlideTimer = 5500
-
-    const images = [
-        "https://www.topgear.com/sites/default/files/2025/12/1128_T008.jpg?w=892&h=502",
-        "https://www.topgear.com/sites/default/files/2025/12/1128_T009.jpg?w=892&h=502",
-        "https://www.topgear.com/sites/default/files/2025/12/1128_T010.jpg?w=892&h=502",
-        "https://www.topgear.com/sites/default/files/2025/12/1202_G009.jpg?w=892&h=502",
-        "https://www.topgear.com/sites/default/files/2025/12/1202_G010.jpg?w=892&h=502",
-        "https://www.topgear.com/sites/default/files/2025/12/1202_G014.jpg?w=892&h=502",
-        "https://www.topgear.com/sites/default/files/2025/12/1202_G015.jpg?w=892&h=502"
-    ]
-
-    const slides = [createImgDiv(images[images.length - 2]), createImgDiv(images[images.length - 1]),
-    ...images.map(createImgDiv),
-    createImgDiv(images[0]), createImgDiv(images[1])
-    ];
+    let images = [];
+    for (let i=1; i <=15; i++) {
+        images[i-1] = `/About/image${i}.jpg`
+    }
 
     const scrollRef = useRef(null);
     const intervalRef = useRef(null);
     const resumeTimeoutRef = useRef(null);
+    const scrollTimeout = useRef(null);
+    const lastScrollLeft = useRef(0);
+    const [slideWidth, setSlideWidth] = useState(0);
 
-    const prev = () => {
-        scrollRef.current.scrollBy({
-            left: -scrollRef.current.scrollWidth / slides.length,
-            behavior: "smooth",
-        });
-    };
 
-    const prevButton = () => {
-        pauseAutoScroll();
-        prev();
-    }
+    const slides = [
+        <CarouselSlide key="clone-start-2" image={images[images.length - 2]} />,
+        <CarouselSlide key="clone-start-1" image={images[images.length - 1]} />,
+        ...images.map((img, i) => <CarouselSlide key={i} image={img} />),
+        <CarouselSlide key="clone-end-1" image={images[0]} />,
+        <CarouselSlide key="clone-end-2" image={images[1]} />,
+        <CarouselSlide key="clone-end-3" image={images[2]} />,
+    ];
 
-    const next = () => {
-        scrollRef.current.scrollBy({
-            left: scrollRef.current.clientWidth / slides.length,
-            behavior: "smooth",
-        });
-    };
 
-    const nextButton = () => {
-        pauseAutoScroll();
-        next();
-    }
+    useEffect(() => {
+        const updateWidth = () => {
+            if (scrollRef.current) {
+                const firstSlide = scrollRef.current.children[0];
+                setSlideWidth(firstSlide.offsetWidth);
+            }
+        };
+        updateWidth();
+        window.addEventListener("resize", updateWidth);
+        return () => window.removeEventListener("resize", updateWidth);
+    }, []);
 
-    const scrollCarousel = () => {
-        let elementWidth = scrollRef.current.scrollWidth / slides.length;
-        let index = Math.round(scrollRef.current.scrollLeft / elementWidth);
-
-        if (index === 1) { scrollRef.current.scrollLeft = elementWidth * (images.length + 1); }
-        if (index === images.length + 2) {scrollRef.current.scrollLeft = elementWidth * 2; }
-    }
-
+    // Auto-scroll
     const startAutoScroll = () => {
-        if (intervalRef.current) return; // prevent duplicates
-        intervalRef.current = setInterval(next, autoSlideTimer);
+        if (intervalRef.current) return;
+        intervalRef.current = setInterval(() => next(true), autoSlideTimer);
     };
 
     const stopAutoScroll = () => {
@@ -76,50 +54,113 @@ const Carousel = () => {
 
     const pauseAutoScroll = () => {
         stopAutoScroll();
-
-        if (resumeTimeoutRef.current) {clearTimeout(resumeTimeoutRef.current)};
-
-        resumeTimeoutRef.current = setTimeout(() => {
-            startAutoScroll();
-        }, pauseAutoSlideTimer);
+        clearTimeout(resumeTimeoutRef.current);
+        resumeTimeoutRef.current = setTimeout(startAutoScroll, pauseAutoSlideTimer);
     };
 
 
+    const scrollOne = (direction = "next") => {
+        if (!scrollRef.current || !slideWidth) return;
+        const container = scrollRef.current;
+        const delta = direction === "next" ? slideWidth : -slideWidth;
+        const target = container.scrollLeft + delta;
 
-    useEffect(() => {
-        scrollRef.current.scrollLeft  = scrollRef.current.scrollWidth / slides.length * 2
-    }, []);
+        container.scrollTo({ left: target, behavior: "smooth" });
 
-    useEffect(() => {
-        startAutoScroll();
-        return stopAutoScroll;
-    }, [])
+        const firstRealIndex = 2;
+        const lastRealIndex = images.length + 1;
+
+        const checkScroll = () => {
+            const index = container.scrollLeft / slideWidth;
+            // If scroll finished, check for wrap
+            if (Math.abs(container.scrollLeft - target) < 1) {
+                container.style.scrollBehavior = "auto";
+                if (direction === "next" && index >= lastRealIndex + 0.5) {
+                    container.scrollLeft = firstRealIndex * slideWidth;
+                } else if (direction === "prev" && index <= firstRealIndex - 0.5) {
+                    container.scrollLeft = lastRealIndex * slideWidth;
+                }
+                container.style.scrollBehavior = "smooth";
+            } else {
+                requestAnimationFrame(checkScroll);
+            }
+        };
+        requestAnimationFrame(checkScroll);
+    };
+
+    const next = (auto = false) => {
+        scrollOne("next");
+        if (!auto) pauseAutoScroll();
+    };
+
+        const prev = () => {
+            scrollOne("prev");
+            pauseAutoScroll();
+        };
 
 
+        const handleScroll = () => {
+            if (!scrollRef.current || !slideWidth) return;
+            const container = scrollRef.current;
 
-    return <div className="">
+            clearTimeout(scrollTimeout.current);
+            scrollTimeout.current = setTimeout(() => {
+                const index = container.scrollLeft / slideWidth;
+                const firstRealIndex = 2;
+                const lastRealIndex = images.length + 1;
 
-        <div className="h-53 md:h-80 overflow-y-hidden overflow-x-auto snap-mandatory snap-x hide-scroll scroll-pl-[10%] scroll-pr-[10%] flex
-        mask-x-from-85% mask-x-to-95%"
-        ref={scrollRef}
-        onScrollEnd={scrollCarousel}
-        onMouseEnter={stopAutoScroll}
-        onMouseLeave={startAutoScroll}
-        >
-            {slides}
+                const goingForward = container.scrollLeft > lastScrollLeft.current;
+                lastScrollLeft.current = container.scrollLeft;
+
+                container.style.scrollBehavior = "auto";
+
+                if (goingForward && index >= lastRealIndex + 0.5) {
+                    container.scrollLeft = firstRealIndex * slideWidth;
+                } else if (!goingForward && index <= firstRealIndex - 0.5) {
+                    container.scrollLeft = lastRealIndex * slideWidth;
+                }
+
+                container.style.scrollBehavior = "smooth";
+            }, 20);
+        };
+
+
+        useEffect(() => {
+            if (scrollRef.current && slideWidth) {
+                scrollRef.current.scrollLeft = 2 * slideWidth; // start at first real slide
+                startAutoScroll();
+            }
+            return stopAutoScroll;
+        }, [slideWidth]);
+
+        return <div className="relative w-full">
+            <div
+            ref={scrollRef}
+            className="h-80 md:h-96  flex overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scroll mask-x-from-85% mask-x-to-95%"
+            style={{scrollbarWidth: "none"}}
+            onScroll={handleScroll}
+            onMouseEnter={stopAutoScroll}
+            onMouseLeave={startAutoScroll}
+            >
+                {slides}
+            </div>
+
+            <div className="flex justify-center gap-4 pt-4 font-bold text-lg">
+                <button
+                className="size-8 leading-none bg-[#d4af37] text-[#010101] rounded-sm hover:bg-transparent hover:border-2 hover:border-[#d4af37] hover:text-[#d4af37] active:bg-transparent active:border-2 active:border-[#d4af37] active:text-[#d4af37]"
+                onClick={prev}
+                >
+                    <i className="fa-solid fa-angle-left"></i>
+                </button>
+                <button
+                className="size-8 leading-none bg-[#d4af37] text-[#010101] rounded-sm hover:bg-transparent hover:border-2 hover:border-[#d4af37] hover:text-[#d4af37] active:bg-transparent active:border-2 active:border-[#d4af37] active:text-[#d4af37]"
+                onClick={next}
+                >
+                    <i className="fa-solid fa-angle-right"></i>
+                </button>
+            </div>
         </div>
 
-        <div className="flex justify-center gap-4 pt-4 font-bold text-lg">
-            <button className="size-8 leading-none bg-[#d4af37] text-[#010101] rounded-sm xl:hover:bg-transparent xl:hover:border-2 xl:hover:border-[#d4af37] xl:hover:text-[#d4af37] hover:cursor-pointer active:bg-transparent active:border-2 active:border-[#d4af37] active:text-[#d4af37]" onClick={prevButton}>
-                <i className="fa-solid fa-angle-left"></i>
-            </button>
-            <button className="size-8 leading-none bg-[#d4af37] text-[#010101] rounded-sm xl:hover:bg-transparent xl:hover:border-2 xl:hover:border-[#d4af37] xl:hover:text-[#d4af37] hover:cursor-pointer active:bg-transparent active:border-2 active:border-[#d4af37] active:text-[#d4af37]" onClick={nextButton}>
-                <i className="fa-solid fa-angle-right"></i>
-            </button>
-        </div>
-
-    </div>
-
-}
+};
 
 export default Carousel;

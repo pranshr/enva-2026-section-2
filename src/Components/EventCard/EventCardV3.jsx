@@ -1,10 +1,16 @@
-const EventCard = () => {
+import "./EventCard.css"
 
+
+const EventCard = (props) => {
+
+
+    const { name, description, location } = props;
 
 
     return <div className="relative table-cell xl:hover:-translate-y-3 duration-300 ease-in-out group">
 
-        <div className="absolute -inset-[0.1rem] rounded-xl bg-glow blur-sm xl:group-hover:scale-101" />
+        <div className="absolute -inset-[0.1rem] rounded-xl blur-sm xl:group-hover:scale-101"
+            style={{backgroundImage: 'linear-gradient(180deg,#d4af37 9%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0) 78%)'}} />
 
             <div className="w-[20rem] bg-radial from-black via-zinc-900 via-65% to-zinc-800 mb-8 md:mb-0 rounded-xl flex flex-col font-[Poppins] relative">
 
@@ -16,10 +22,10 @@ const EventCard = () => {
                             EXCLUSIVE INVITATION
                         </div>
                         <div className="text-4xl font-semibold mb-1">
-                            Treasure Hunt
+                            {name}
                         </div>
                         <div className="text-md lg:text-[0.85rem] text-center text-gray-500 mb-10 mx-4">
-                            Decode cryptic clues, chase hidden locations, and race against time in this cinematic hunt.
+                            {description}
                         </div>
 
                         <div className="text-center bg-gradient-to-t from-[#2f2f2f] via-[#1d1d1d] to-[#1d1d1d] py-4 px-12 rounded-lg border-b-3 border-[#d4af37]">
@@ -27,7 +33,7 @@ const EventCard = () => {
                                 LOCATION
                             </div>
                             <div className="text-2xl font-medium">
-                                Main Hall
+                                {location}
                             </div>
                         </div>
 
